@@ -1,0 +1,1 @@
+{"drive":"D:/","alarm1":{"value":4096,"sound":"./sound1.mp3","notification":true},"alarm2":{"value":2048,"sound":"./sound2.mp3","notification":true},"alarm3":{"value":1024,"sound":"./sound3.mp3","notification":true}}
