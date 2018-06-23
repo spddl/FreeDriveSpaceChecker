@@ -7,7 +7,7 @@ zusätzlich die Zeit bis der Datenträger voll sein wird.
 Ebenso lassen sich drei MP3s einbinden die jeweils beim erreichen eines
 festlegbaren MB-Limits abgespielt werden.
 
-[Download](https://github.com/spddl/FreeDriveSpaceChecker/releases)
+# [Download](https://github.com/spddl/FreeDriveSpaceChecker/releases)
 
 In Zukunft wird es in Windows möglich sein das Sounddevice auszuwählen auf dem die
 die MP3s/Alerts wiedergegeben werden sollen.
