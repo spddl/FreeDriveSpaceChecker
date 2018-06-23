@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 
-	"./Config"
+	"./config"
 	"./disk"
 	"./mp3"
 	"github.com/VividCortex/ewma"
@@ -22,7 +23,6 @@ import (
 // Prozentanzeige Toggle
 // beim starten die Limits überprüfen und aktivieren dessen Limit noch nicht erreicht ist
 
-// MyMainWindow ...
 type MyMainWindow struct {
 	*walk.MainWindow
 	prevFilePath string
@@ -58,7 +58,6 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("")
 				total, free, err := disk.Space(drive)
 				if err != nil {
 					panic(err)
@@ -66,17 +65,23 @@ func main() {
 
 				if Config.Alarm1.Notification && Config.Alarm1.Value > float64(free)/MB {
 					Config.Alarm1.Notification = false
-					go mp3.Run(Config.Alarm1.Sound)
+					if Config.Alarm1.Sound != "" {
+						go mp3.Run(Config.Alarm1.Sound)
+					}
 					go config.SaveConfigFile(Config)
 				}
 				if Config.Alarm2.Notification && Config.Alarm2.Value > float64(free)/MB {
 					Config.Alarm2.Notification = false
-					go mp3.Run(Config.Alarm2.Sound)
+					if Config.Alarm2.Sound != "" {
+						go mp3.Run(Config.Alarm2.Sound)
+					}
 					go config.SaveConfigFile(Config)
 				}
 				if Config.Alarm3.Notification && Config.Alarm3.Value > float64(free)/MB {
 					Config.Alarm3.Notification = false
-					go mp3.Run(Config.Alarm3.Sound)
+					if Config.Alarm3.Sound != "" {
+						go mp3.Run(Config.Alarm3.Sound)
+					}
 					go config.SaveConfigFile(Config)
 				}
 
@@ -259,18 +264,43 @@ func main() {
 	}.Create()); err != nil {
 		panic(err)
 	}
+
+	// TODO wenn mehrere Fehlschlagen in einer MsgBox zusammenfassen
+	if Config.Alarm1.Notification && Config.Alarm1.Sound != "" {
+		found, e := config.Exists(Config.Alarm1.Sound)
+		if e != nil {
+			fmt.Printf("File error: %v\n", e)
+			os.Exit(1)
+		}
+		if !found {
+			walk.MsgBox(mw, "Audio Datei", "Audio1 Datei nicht gefunden bitte in den Einstellungen ändern:\n"+Config.Alarm1.Sound, walk.MsgBoxIconError)
+		}
+	}
+	if Config.Alarm2.Notification && Config.Alarm2.Sound != "" {
+		found, e := config.Exists(Config.Alarm2.Sound)
+		if e != nil {
+			fmt.Printf("File error: %v\n", e)
+			os.Exit(1)
+		}
+		if !found {
+			walk.MsgBox(mw, "Audio Datei", "Audio2 Datei nicht gefunden bitte in den Einstellungen ändern:\n"+Config.Alarm1.Sound, walk.MsgBoxIconError)
+		}
+	}
+	if Config.Alarm3.Notification && Config.Alarm3.Sound != "" {
+		found, e := config.Exists(Config.Alarm3.Sound)
+		if e != nil {
+			fmt.Printf("File error: %v\n", e)
+			os.Exit(1)
+		}
+		if !found {
+			walk.MsgBox(mw, "Audio Datei", "Audio3 Datei nicht gefunden bitte in den Einstellungen ändern:\n"+Config.Alarm1.Sound, walk.MsgBoxIconError)
+		}
+	}
+
 	mw.Run() // https://github.com/lxn/walk/issues/103#issuecomment-278243090
 }
 
-func (mw *MyMainWindow) openActionTriggered() {
-	walk.MsgBox(mw, "Open", "Pretend to open a file...", walk.MsgBoxIconInformation)
-}
-
 func (mw *MyMainWindow) aboutActionTriggered() {
-	// if err := mp3run(); err != nil {
-	// 	panic(err)
-	// }
-
 	walk.MsgBox(mw, "About",
 		`by spddl
 das lernst du auch noch ;)
@@ -325,9 +355,17 @@ func RunDialog(owner walk.Form, mw *MyMainWindow, config *config.Config) (int, e
 							}
 							if len(path) != 0 {
 								_, file := filepath.Split(path)
-								audio1label.SetText(file)
-								config.Alarm1.Sound = path
-								go mp3.Run(path)
+								go func() {
+									err := mp3.Run(path)
+									if err != nil {
+										walk.MsgBox(mw, "FEHLER", "Datei konnte nicht geladen werden\nERR: "+err.Error(), walk.MsgBoxIconError)
+										audio1label.SetText("<none>")
+										config.Alarm1.Sound = ""
+									} else {
+										audio1label.SetText(file)
+										config.Alarm1.Sound = path
+									}
+								}()
 							}
 						},
 						OnBoundsChanged: func() {
@@ -376,9 +414,17 @@ func RunDialog(owner walk.Form, mw *MyMainWindow, config *config.Config) (int, e
 							}
 							if len(path) != 0 {
 								_, file := filepath.Split(path)
-								audio2label.SetText(file)
-								config.Alarm2.Sound = path
-								go mp3.Run(path)
+								go func() {
+									err := mp3.Run(path)
+									if err != nil {
+										walk.MsgBox(mw, "FEHLER", "Datei konnte nicht geladen werden\nERR: "+err.Error(), walk.MsgBoxIconError)
+										audio2label.SetText("<none>")
+										config.Alarm2.Sound = ""
+									} else {
+										audio2label.SetText(file)
+										config.Alarm2.Sound = path
+									}
+								}()
 							}
 						},
 						OnBoundsChanged: func() {
@@ -426,9 +472,17 @@ func RunDialog(owner walk.Form, mw *MyMainWindow, config *config.Config) (int, e
 							}
 							if len(path) != 0 {
 								_, file := filepath.Split(path)
-								audio3label.SetText(file)
-								config.Alarm3.Sound = path
-								go mp3.Run(path)
+								go func() {
+									err := mp3.Run(path)
+									if err != nil {
+										walk.MsgBox(mw, "FEHLER", "Datei konnte nicht geladen werden\nERR: "+err.Error(), walk.MsgBoxIconError)
+										audio3label.SetText("<none>")
+										config.Alarm3.Sound = ""
+									} else {
+										audio3label.SetText(file)
+										config.Alarm3.Sound = path
+									}
+								}()
 							}
 						},
 						OnBoundsChanged: func() {

@@ -27,7 +27,7 @@ type Config struct { // https://mholt.github.io/json-to-go/
 	} `json:"alarm3"`
 }
 
-func ExistsFolder(path string) (bool, error) {
+func Exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
@@ -40,7 +40,7 @@ func ExistsFolder(path string) (bool, error) {
 
 // Init zumn initialisieren der Conifg
 func Init() Config {
-	found, e := ExistsFolder("./config.json")
+	found, e := Exists("./config.json")
 	if e != nil {
 		fmt.Printf("File error: %v\n", e)
 		os.Exit(1)

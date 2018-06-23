@@ -8,30 +8,31 @@ import (
 	"github.com/hajimehoshi/oto"
 )
 
-// Run wird gebraucht um dateien abzuspielen
-func Run(name string) { // func mp3run() error {
+// Run wird gebraucht um die Dateien abzuspielen
+func Run(name string) error {
 	f, err := os.Open(name)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer f.Close()
 
 	d, err := mp3.NewDecoder(f)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer d.Close()
 
 	// (sampleRate, channelNum, bytesPerSample, bufferSizeInBytes int)
 	p, err := oto.NewPlayer(d.SampleRate(), 2, 2, 44100)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer p.Close()
 
 	// fmt.Printf("Length: %d[bytes]\n", d.Length())
 
 	if _, err := io.Copy(p, d); err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
